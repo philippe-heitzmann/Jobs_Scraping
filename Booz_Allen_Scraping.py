@@ -55,6 +55,7 @@ while True:
 			joblinkpage[x].click()
 			#scraping each individual posting 
 
+			#this is a Github test
 
 			print('Scraped position')
 			driver.back()

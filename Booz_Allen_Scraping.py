@@ -29,6 +29,8 @@ driver = webdriver.Chrome(ChromeDriverManager().install(), 	options=chrome_optio
 
 driver.get(url)
 
+driver.implicitly_wait(1)
+
 jobsearchbar = driver.find_element_by_id('1484')
 jobsearchbar.send_keys('data science')
 
@@ -37,13 +39,15 @@ submitbutton.click()
 
 pagenumber = 1
 
+skilldict = {}
+
 while True:
 
 	driver.implicitly_wait(1)
 
 	joblinkpage = driver.find_elements_by_class_name('link')
 
-	for x in range(1,len(joblinkpage)+1):
+	for x in range(18,len(joblinkpage)):
 
 		joblinkpage = driver.find_elements_by_class_name('link')
 
@@ -60,6 +64,8 @@ while True:
 			print('Job Link is', job_link)
 
 			joblinkpage[x].click()
+
+
 			#scraping each individual posting 
 
 			
@@ -106,12 +112,24 @@ while True:
 				driver.implicitly_wait(1)
 
 				posting_text = ''
-				text = driver.find_elements_by_xpath(".//div[@class='article__content article__content--rich-text']//p")
+				text = driver.find_elements_by_xpath(".//div[@class='article__content article__content--rich-text']")
 				for ele in text:
 					posting_text += ele.text
 				print('Posting Text is',posting_text)
 			except (NoSuchElementException, StaleElementReferenceException) as e:
 				posting_text = ''
+				pass
+
+			try:
+				# index_YouHave = posting_text.index('You Have:')
+				index_YouHave = re.search(r"Basic Qualifications:|You Have:",string1).start()
+				index_NiceIfYouHave = re.search(r"Additional Qualifications:|Nice If You Have:",string1).start()
+				# for m in re.finditer('of experience with', text):
+				# 	if (m.start() > index_YouHave) and (m.start() < index_NiceIfYouHave):
+
+				#CREATE REGEX MATCHING FORMULA THAT WILL MAP YEARS OF EXPERIENCE TO CORRESPONDING DESIRED SKILLS 
+
+			except:
 				pass
 
 

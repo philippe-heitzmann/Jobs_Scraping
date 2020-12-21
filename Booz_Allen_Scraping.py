@@ -35,13 +35,15 @@ jobsearchbar.send_keys('data science')
 submitbutton = driver.find_element_by_id('1488-submit')
 submitbutton.click()
 
+pagenumber = 1
+
 while True:
 
 	driver.implicitly_wait(1)
 
 	joblinkpage = driver.find_elements_by_class_name('link')
 
-	for x in range(18,len(joblinkpage)):
+	for x in range(1,len(joblinkpage)+1):
 
 		joblinkpage = driver.find_elements_by_class_name('link')
 
@@ -52,10 +54,66 @@ while True:
 			# WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, '//a[@class="WSJTheme--day-link--19pByDpZ "][@href]')))
 
 			print(x,'/ 20 Accessing the following link:', joblinkpage[x].get_attribute('href'))
+
+			#scraping the job link
+			job_link = joblinkpage[x].get_attribute('href')
+			print('Job Link is', job_link)
+
 			joblinkpage[x].click()
 			#scraping each individual posting 
 
-			#this is a Github test
+			
+
+			#scraping the job title 
+			try:
+				
+				job_title = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, ".//h2[@class='banner__title banner__title--details']"))).text
+				print('Job Title text is',job_title)
+				
+			except:
+				job_title = ''
+				print('Failed to get Job title')
+				pass
+
+			#scraping the location
+			try:
+				#<div class="banner__subtitle">
+				location = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, ".//div[@class='banner__subtitle']"))).text
+				print('Location text is',location)
+			except:
+				location = ''
+				print('Failed to get Location')
+				pass
+
+			#scraping the job number ID
+			try:
+				job_loc_and_ID = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.XPATH, ".//div[@class='left']//p")))
+				job_loc = job_loc_and_ID[0].text
+				job_ID = job_loc_and_ID[1].text
+				print('Job ID is',job_ID)
+				print('Job Loc is', job_loc)
+				
+			except:
+				job_loc = ''
+				job_ID = ''
+				print('Failed to get Job ID')
+				print('Failed to get Job Loc')
+				pass
+
+			#scraping the job details 
+			try:
+				
+				driver.implicitly_wait(1)
+
+				posting_text = ''
+				text = driver.find_elements_by_xpath(".//div[@class='article__content article__content--rich-text']//p")
+				for ele in text:
+					posting_text += ele.text
+				print('Posting Text is',posting_text)
+			except (NoSuchElementException, StaleElementReferenceException) as e:
+				posting_text = ''
+				pass
+
 
 			print('Scraped position')
 			driver.back()
@@ -63,14 +121,17 @@ while True:
 			print('Position Scraping Failed')
 			continue
 	try:
-		driver.implicitly_wait(5)
+		nextbutton = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, 'Next')))
+		
+		print(nextbutton)
+		print(nextbutton.get_attribute('href'))
+		
+		driver.get(nextbutton.get_attribute('href'))
 
-		# nextbutton = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, 'Next >>')))
+		pagenumber += 1
 
-		nextbutton = driver.find_element_by_link_text('Next >>')
-		nextbutton.click()
-		print('Success: Accessed Next Page')
+		print('Success: Accessed Page #', pagenumber)
 	except:
-		print('Failed: Did not access next page')
+		print('Accessed all pages')
 		break
 

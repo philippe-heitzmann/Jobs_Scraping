@@ -14,9 +14,22 @@ from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.action_chains import ActionChains
+from collections import defaultdict
+
 
 #input Booz Allen job postings url 
 #output .json file 
+
+#defining function used to match years of experience to desired skills 
+
+def sequen_zip(lst, n):
+    newlist = list(zip(*(lst[i:] for i in range(n))))
+    newlist.append(tuple([tuple(lst[-1]),tuple(['0',-1])]))
+    return newlist
+
+#regex patter match for years of experience formatting
+p = re.compile(r'[0-9]+\+')
+
 
 url = "https://careers.boozallen.com/jobs/search"
 
@@ -39,7 +52,8 @@ submitbutton.click()
 
 pagenumber = 1
 
-skilldict = {}
+results_dict = {}
+skill_dict = {}
 
 while True:
 
@@ -47,11 +61,20 @@ while True:
 
 	joblinkpage = driver.find_elements_by_class_name('link')
 
-	for x in range(18,len(joblinkpage)):
+	for x in range(len(joblinkpage)):
 
 		joblinkpage = driver.find_elements_by_class_name('link')
 
 		driver.implicitly_wait(1)
+
+
+		match_list_basic = []
+
+		match_list_plus = []
+
+		exp_dict_basic = defaultdict(list)
+
+		exp_dict_plus = defaultdict(list)
 		
 		try:	
 
@@ -68,7 +91,6 @@ while True:
 
 			#scraping each individual posting 
 
-			
 
 			#scraping the job title 
 			try:
@@ -112,26 +134,82 @@ while True:
 				driver.implicitly_wait(1)
 
 				posting_text = ''
+
 				text = driver.find_elements_by_xpath(".//div[@class='article__content article__content--rich-text']")
 				for ele in text:
 					posting_text += ele.text
-				print('Posting Text is',posting_text)
+				# print('Posting Text is',posting_text)
 			except (NoSuchElementException, StaleElementReferenceException) as e:
 				posting_text = ''
 				pass
 
 			try:
 				# index_YouHave = posting_text.index('You Have:')
-				index_YouHave = re.search(r"Basic Qualifications:|You Have:",string1).start()
-				index_NiceIfYouHave = re.search(r"Additional Qualifications:|Nice If You Have:",string1).start()
-				# for m in re.finditer('of experience with', text):
-				# 	if (m.start() > index_YouHave) and (m.start() < index_NiceIfYouHave):
+				index_YouHave = re.search(r"Basic Qualifications:|You Have:",posting_text).start()
+				index_NiceIfYouHave = re.search(r"Additional Qualifications:|Nice If You Have:",posting_text).start()
 
-				#CREATE REGEX MATCHING FORMULA THAT WILL MAP YEARS OF EXPERIENCE TO CORRESPONDING DESIRED SKILLS 
+				print('Index you have is:', index_YouHave)
+				
+				print('Index nice if you have is:', index_NiceIfYouHave)
+
+				posting_text_you_have = posting_text[index_YouHave:index_NiceIfYouHave]
+				posting_text_nice_if_you_have = posting_text[index_NiceIfYouHave:]
+
+				print("Posting text you have is:", posting_text_you_have)
+
+				print("Posting text nice if you have is:", posting_text_nice_if_you_have)
+
+				 
+				basic_dict = defaultdict(list)
+				pref_dict = defaultdict(list)
+
+				for m in p.finditer(posting_text_you_have):
+					basic_dict[m.group()].append(posting_text_you_have[m.start():posting_text_you_have[m.start():].index('\n')])
+
+				for m in p.finditer(posting_text_nice_if_you_have):
+					pref_dict[m.group()].append(posting_text_nice_if_you_have[m.start():posting_text_nice_if_you_have[m.start():].index('\n')])
+				
+
+				# for m in p.finditer(posting_text_nice_if_you_have):
+				# 	match_list_plus.append(tuple([m.group(),m.start()]))
+
+
+				# if len(match_list_basic) > 0:
+				# 	for g in sequen_zip(match_list_basic, 2):
+				# 		exp_dict_basic[g[0][0][0]].append(posting_text_you_have[g[0][1]:g[1][1]])
+				# else:
+				# 	pass
+				
+				# if len(match_list_plus) > 0:
+				# 	for g in sequen_zip(match_list_plus, 2):
+				# 		exp_dict_plus[g[0][0][0]].append(posting_text_nice_if_you_have[g[0][1]:g[1][1]])
+				# else:
+				# 	pass
+
 
 			except:
+				print('Experience Scraping Failed')
 				pass
 
+
+			try:
+				results_dict['job_title'] = job_title
+				results_dict['location'] = location
+				results_dict['job_ID'] = job_ID
+				results_dict['job_link'] = job_link
+				# results_dict['basic_qual'] = dict(exp_dict_basic)
+				# results_dict['preferred_qual'] = dict(exp_dict_plus)
+				results_dict['basic_qual'] = dict(basic_dict)
+				results_dict['preferred_qual'] = dict(pref_dict)
+				
+				key1 = job_title + ' ' + job_ID
+
+				skill_dict[key1] = results_dict
+
+				print(skill_dict)
+
+			except:
+				print('Error adding to skill_dict')
 
 			print('Scraped position')
 			driver.back()

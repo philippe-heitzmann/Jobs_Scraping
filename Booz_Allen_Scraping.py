@@ -75,6 +75,9 @@ while True:
 		exp_dict_basic = defaultdict(list)
 
 		exp_dict_plus = defaultdict(list)
+
+		basic_dict = defaultdict(list)
+		pref_dict = defaultdict(list)
 		
 		try:	
 
@@ -145,8 +148,8 @@ while True:
 
 			try:
 				# index_YouHave = posting_text.index('You Have:')
-				index_YouHave = re.search(r"Basic Qualifications:|You Have:",posting_text).start()
-				index_NiceIfYouHave = re.search(r"Additional Qualifications:|Nice If You Have:",posting_text).start()
+				index_YouHave = re.search(r"Basic Qualifications|You Have:",posting_text).start()
+				index_NiceIfYouHave = re.search(r"Additional Qualifications|Nice If You Have:",posting_text).start()
 
 				print('Index you have is:', index_YouHave)
 				
@@ -159,9 +162,7 @@ while True:
 
 				print("Posting text nice if you have is:", posting_text_nice_if_you_have)
 
-				 
-				basic_dict = defaultdict(list)
-				pref_dict = defaultdict(list)
+				
 
 				for m in p.finditer(posting_text_you_have):
 					basic_dict[m.group()].append(posting_text_you_have[m.start():posting_text_you_have[m.start():].index('\n')])
@@ -169,6 +170,8 @@ while True:
 				for m in p.finditer(posting_text_nice_if_you_have):
 					pref_dict[m.group()].append(posting_text_nice_if_you_have[m.start():posting_text_nice_if_you_have[m.start():].index('\n')])
 				
+				results_dict['basic_qual'] = dict(basic_dict)
+				results_dict['preferred_qual'] = dict(pref_dict)
 
 				# for m in p.finditer(posting_text_nice_if_you_have):
 				# 	match_list_plus.append(tuple([m.group(),m.start()]))
@@ -199,9 +202,8 @@ while True:
 				results_dict['job_link'] = job_link
 				# results_dict['basic_qual'] = dict(exp_dict_basic)
 				# results_dict['preferred_qual'] = dict(exp_dict_plus)
-				results_dict['basic_qual'] = dict(basic_dict)
-				results_dict['preferred_qual'] = dict(pref_dict)
-				
+
+
 				key1 = job_title + ' ' + job_ID
 
 				skill_dict[key1] = results_dict
